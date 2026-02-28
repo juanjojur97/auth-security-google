@@ -1,29 +1,21 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: "1578"
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   security:
     oauth2:
       client:
         registration:
           auth0:
-            client-id: v6QfZR05YO5dsJtHKX2NbapucFsGdsIy
-            client-secret: Kf52IWzrF9dKA4lqMdOCJInpKXfqZyn5IssoG_qlrWmCtrLfMam8CY-P71_n8A92
+            client-id: ${AUTH0_CLIENT_ID}
+            client-secret: ${AUTH0_CLIENT_SECRET}
             scope:
               - openid
               - profile
               - email
-            client-name: Auth0
         provider:
           auth0:
-            issuer-uri: https://dev-juanjojurado.eu.auth0.com/
+            issuer-uri: https://${AUTH0_DOMAIN}/
