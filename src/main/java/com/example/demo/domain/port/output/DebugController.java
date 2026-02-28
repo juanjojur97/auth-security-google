@@ -6,11 +6,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -33,20 +35,28 @@ public class DebugController {
     public Map<String, Object> getSessionInfo(Authentication authentication) {
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
 
-        // Recuperamos el Access Token (el 'ya29...')
         OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
                 oauthToken.getAuthorizedClientRegistrationId(),
                 oauthToken.getName());
 
-        String accessToken = client.getAccessToken().getTokenValue();
+        Map<String, Object> debugInfo = new LinkedHashMap<>(); // Usamos Linked para mantener el orden
 
-        Map<String, Object> debugInfo = new HashMap<>();
-        debugInfo.put("1_CLIENT_ID", clientId);
-        debugInfo.put("2_CLIENT_SECRET", clientSecret);
-        debugInfo.put("3_GOOGLE_ACCESS_TOKEN", accessToken);
-        debugInfo.put("4_USER_DETAILS", oauthToken.getPrincipal().getAttributes());
+        // 1. Datos de la App
+        debugInfo.put("CLIENT_ID", clientId);
+        debugInfo.put("CLIENT_SECRET", clientSecret);
 
-        log.info("🚀 Información de sesión recuperada con éxito");
+        // 2. Access Token (Para Google Drive - el 'ya29')
+        debugInfo.put("GOOGLE_ACCESS_TOKEN", client.getAccessToken().getTokenValue());
+
+        // 3. RECUPERAR EL JWT (ID Token)
+        if (oauthToken.getPrincipal() instanceof OidcUser oidcUser) {
+            // Este es el JWT firmado por Google que pediste
+            debugInfo.put("JWT_ID_TOKEN", oidcUser.getIdToken().getTokenValue());
+            debugInfo.put("JWT_CLAIMS", oidcUser.getClaims());
+        } else {
+            debugInfo.put("JWT_ID_TOKEN", "No es un usuario OIDC (revisa el scope 'openid')");
+        }
+
         return debugInfo;
     }
 }
